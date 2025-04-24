@@ -3,16 +3,22 @@
 # Install Flutter
 echo "=== Installing Flutter ==="
 git clone https://github.com/flutter/flutter.git -b stable --depth 1
-export PATH="$PATH:$(pwd)/flutter/bin"
+export PATH="$PATH:$PWD/flutter/bin"
 
-# Set up web
-echo "=== Setting Up Web ==="
-flutter precache
+# Setup environment
+echo "=== Setting Up Environment ==="
+echo "export PATH=\"\$PATH:$PWD/flutter/bin\"" >> ~/.bashrc
+source ~/.bashrc
+
+# Verify installation
+echo "=== Verifying Installation ==="
+which flutter
+flutter --version
+
+# Build setup
+echo "=== Configuring Build ==="
+flutter config --no-analytics
 flutter config --enable-web
-
-# Install dependencies
-echo "=== Installing Dependencies ==="
-flutter doctor -v
 flutter clean
 flutter pub get
 
