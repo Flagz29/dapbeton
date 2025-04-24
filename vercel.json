@@ -3,18 +3,16 @@
     "builds": [
       {
         "src": "build/web/**",
-      "use": "@vercel/static",
-  
-        "config": {
-          "distDir": "build/web",
-          "includeFiles": ["flutter/**"]
-        }
+        "use": "@vercel/static"
       }
     ],
     "routes": [
       {
-        "src": "/.*",
-        "dest": "/index.html"
+        "src": "/(.*)",
+        "dest": "/build/web/$1",
+        "headers": {
+          "Cache-Control": "no-cache"
+        }
       }
     ]
   }
