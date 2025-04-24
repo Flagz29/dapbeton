@@ -8,7 +8,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "./setup_flutter.sh",
+    "build": "flutter build web --release --verbose"
   },
   "keywords": [],
   "author": "",
@@ -26,5 +28,6 @@
     "pg": "^8.14.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.6"
+    
   }
 }
