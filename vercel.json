@@ -2,8 +2,9 @@
     "version": 2,
     "builds": [
       {
-        "src": "package.json",
-        "use": "@vercel/static-build",
+        "src": "lib/main.dart",
+        "use": "@vercel/flutter",
+  
         "config": {
           "distDir": "build/web",
           "includeFiles": ["flutter/**"]

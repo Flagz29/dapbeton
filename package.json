@@ -10,7 +10,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "install": "chmod +x setup_flutter.sh && ./setup_flutter.sh",
-    "build": "flutter build web --release"
+    "build": "flutter build web",
+    "vercel-build": "curl -sL https://flutter.dev/docs/get-started/install/linux | bash && flutter doctor && flutter build web"
   },
   "keywords": [],
   "author": "",
