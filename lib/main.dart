@@ -7,10 +7,13 @@ import 'package:dapbeton/pages/home_page.dart';
 import 'package:dapbeton/pages/login_page.dart';
 import 'package:dapbeton/screen/profile_page.dart';
 
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+
 void main(dynamic flutterCart) async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? token = prefs.getString('token'); // Cek apakah token tersimpan
+  setUrlStrategy(PathUrlStrategy()); // Gunakan path-based routing
 
   runApp(MyApp(isLoggedIn: token != null)); // Jika ada token, langsung ke Home
 }
