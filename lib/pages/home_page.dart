@@ -178,10 +178,13 @@ class _HomePageState extends State<HomePage> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => ProductDetail1(
+                                        productId: product["id"]?.toString() ??
+                                            '', // <-- ganti sesuai nama field asli, bisa juga "product_id"
                                         title: product["title"] ?? '',
                                         description:
                                             product["description"] ?? '',
-                                        price: product["price"] ?? '',
+                                        price:
+                                            product["price"]?.toString() ?? '',
                                         image: product["image"] ?? '',
                                       ),
                                     ),

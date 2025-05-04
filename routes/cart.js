@@ -3,103 +3,90 @@ const router = express.Router();
 const pool = require('../db'); // koneksi PostgreSQL
 const verifyToken = require('../middleware/authMiddleware'); // JWT middleware
 
-// 🔸 Tambah item ke cart
-router.post('/cart', verifyToken, async (req, res) => {
-  try {
-    const { product_name, price, quantity, image } = req.body;
-    const user_id = req.user.id;
-
-    const newCart = await pool.query(
-      'INSERT INTO carts (user_id, product_name, price, quantity, image) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [user_id, product_name, price, quantity, image]
-    );
-
-    res.json(newCart.rows[0]);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-});
-
-// 🔸 Hapus 1 item dari cart (pakai id cart)
-router.delete('/cart/:id', verifyToken, async (req, res) => {
-  try {
-    const cartId = req.params.id;
-    const userId = req.user.id;
-
-    const deleted = await pool.query(
-      'DELETE FROM carts WHERE id = $1 AND user_id = $2 RETURNING *',
-      [cartId, userId]
-    );
-
-    if (deleted.rows.length === 0) {
-      return res.status(404).json({ message: 'Cart item not found' });
-    }
-
-    res.json({ message: 'Item berhasil dihapus dari keranjang' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-});
-
-// 🔸 Hapus semua cart user
-router.delete('/cart', verifyToken, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    await pool.query('DELETE FROM carts WHERE user_id = $1', [userId]);
-    res.json({ message: 'Semua item di keranjang berhasil dihapus' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-});
-
-// 🔸 Lihat Isi Keranjang
 router.get('/cart', verifyToken, async (req, res) => {
+  const userId = req.user.id;
+  const result = await pool.query(`
+    SELECT c.id, c.product_id, p.title, p.price, p.image, c.quantity, c.selected
+    FROM cart_items c
+    JOIN products p ON p.id = c.product_id
+    WHERE c.user_id = $1
+  `, [userId]);
+
+  res.json(result.rows);
+});
+
+router.put('/cart/:id', verifyToken, async (req, res) => {
+  const { quantity, selected } = req.body;
+  const cartId = req.params.id;
+
+  await pool.query(`
+    UPDATE cart_items
+    SET quantity = $1, selected = $2
+    WHERE id = $3
+  `, [quantity, selected, cartId]);
+
+  res.json({ message: 'Cart updated' });
+});
+
+router.delete('/cart/:id', verifyToken, async (req, res) => {
+  await pool.query(`DELETE FROM cart_items WHERE id = $1`, [req.params.id]);
+  res.json({ message: 'Item removed' });
+});
+
+router.post('/cart/:productId', verifyToken, async (req, res) => {
+  const userId = req.user.id;
+  const productId = parseInt(req.params.productId, 10);
+  const { quantity } = req.body;
+
   try {
-    const userId = req.user.id;
+    // Pastikan produk ada
+    const productCheck = await pool.query(
+      'SELECT * FROM products WHERE id = $1',
+      [productId]
+    );
 
-    const carts = await pool.query('SELECT * FROM carts WHERE user_id = $1', [userId]);
-
-    if (carts.rows.length === 0) {
-      return res.status(404).json({ message: 'Keranjang Anda kosong' });
+    if (productCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Produk tidak ditemukan' });
     }
 
-    res.json(carts.rows);
+    // Cek apakah produk sudah ada di keranjang user
+    const existing = await pool.query(
+      'SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2',
+      [userId, productId]
+    );
+
+    if (existing.rows.length > 0) {
+      // Kalau sudah ada, update quantity
+      const newQty = existing.rows[0].quantity + quantity;
+      await pool.query(
+        'UPDATE cart_items SET quantity = $1 WHERE id = $2',
+        [newQty, existing.rows[0].id]
+      );
+      return res.json({ message: 'Quantity diperbarui di keranjang' });
+    }
+
+    // Kalau belum ada, tambahkan item baru
+    await pool.query(
+      'INSERT INTO cart_items (user_id, product_id, quantity, selected) VALUES ($1, $2, $3, true)',
+      [userId, productId, quantity]
+    );
+
+    res.json({ message: 'Produk berhasil ditambahkan ke keranjang' });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Gagal menambahkan ke keranjang:', err);
+    res.status(500).json({ message: 'Kesalahan server' });
   }
 });
 
-// 🔸 Update Quantity Item di Keranjang
-router.put('/cart/:id', verifyToken, async (req, res) => {
+router.delete('/cart', verifyToken, async (req, res) => {
+  const userId = req.user.id;
+
   try {
-    const cartId = req.params.id;
-    const { quantity } = req.body;
-    const userId = req.user.id;
-
-    // Cek apakah cart item ada
-    const cartItem = await pool.query(
-      'SELECT * FROM carts WHERE id = $1 AND user_id = $2',
-      [cartId, userId]
-    );
-
-    if (cartItem.rows.length === 0) {
-      return res.status(404).json({ message: 'Cart item tidak ditemukan' });
-    }
-
-    // Update quantity
-    const updatedCart = await pool.query(
-      'UPDATE carts SET quantity = $1 WHERE id = $2 RETURNING *',
-      [quantity, cartId]
-    );
-
-    res.json(updatedCart.rows[0]);
+    await pool.query('DELETE FROM cart_items WHERE user_id = $1', [userId]);
+    res.json({ message: 'Semua item berhasil dihapus dari keranjang' });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Gagal menghapus semua item:', err);
+    res.status(500).json({ message: 'Kesalahan server' });
   }
 });
 

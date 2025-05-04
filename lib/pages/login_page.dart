@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'register_page.dart';
-import 'home_page.dart'; // Import halaman home
+import 'home_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -39,13 +39,11 @@ class _LoginPageState extends State<LoginPage> {
 
           if (data.containsKey('token')) {
             String token = data['token'];
-            String userId = data['userId'].toString();  // Ambil ID user dari API
+            String userId = data['userId'].toString();
 
-
-            // Simpan token dan userId setelah login
             SharedPreferences prefs = await SharedPreferences.getInstance();
-            await prefs.setString('token', token); // Simpan token JWT
-            await prefs.setString('userId', userId); // Simpan ID User
+            await prefs.setString('token', token);
+            await prefs.setString('userId', userId);
 
             Fluttertoast.showToast(
               msg: "Login Berhasil",
@@ -55,13 +53,11 @@ class _LoginPageState extends State<LoginPage> {
               textColor: Colors.white,
             );
 
-            // Pindah ke halaman home
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => HomePage()),
             );
           } else {
-            print("Error: Token tidak ditemukan dalam response");
             Fluttertoast.showToast(
               msg: "Login gagal: Token tidak ditemukan",
               toastLength: Toast.LENGTH_SHORT,
@@ -71,7 +67,6 @@ class _LoginPageState extends State<LoginPage> {
             );
           }
         } else {
-          print("Login gagal dengan status: ${response.statusCode}");
           Fluttertoast.showToast(
             msg: "Email atau password salah",
             toastLength: Toast.LENGTH_SHORT,
@@ -81,7 +76,6 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } catch (e) {
-        print("Error saat login: $e"); // Menampilkan error di debug console
         Fluttertoast.showToast(
           msg: "Terjadi kesalahan: $e",
           toastLength: Toast.LENGTH_LONG,
@@ -135,9 +129,8 @@ class _LoginPageState extends State<LoginPage> {
                     _buildTextField(Icons.email, "Email", emailController,
                         isEmail: true),
                     const SizedBox(height: 25),
-                    _buildTextField(
-                        Icons.lock, "Kata sandi", passwordController,
-                        isPassword: true),
+                    _buildTextField(Icons.lock, "Kata sandi",
+                        passwordController, isPassword: true),
                     const SizedBox(height: 17),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -209,8 +202,7 @@ class _LoginPageState extends State<LoginPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => RegisterPage(),
-                                ),
+                                    builder: (context) => RegisterPage()),
                               );
                             },
                             child: Text(
@@ -237,18 +229,29 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildTextField(
-      IconData icon, String hintText, TextEditingController controller,
-      {bool isPassword = false, bool isEmail = false}) {
+    IconData icon,
+    String hintText,
+    TextEditingController controller, {
+    bool isPassword = false,
+    bool isEmail = false,
+  }) {
     return TextFormField(
       controller: controller,
       obscureText: isPassword ? !isPasswordVisible : false,
       keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
+      textInputAction:
+          isPassword ? TextInputAction.done : TextInputAction.next,
+      onFieldSubmitted: (value) {
+        if (isPassword) _login(); // Panggil login saat tekan enter di field password
+      },
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Colors.grey[700]),
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
-                  isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  isPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
                   color: Colors.grey[700],
                 ),
                 onPressed: () {

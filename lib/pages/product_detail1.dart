@@ -1,20 +1,20 @@
 import 'dart:convert';
 import 'package:dapbeton/pages/cart_page.dart';
-import 'package:dapbeton/pages/midtrans_payment_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:async';
 import 'dart:math';
 
 class ProductDetail1 extends StatefulWidget {
+  final String productId; // <-- ID produk untuk keperluan API
   final String title;
   final String description;
   final String price;
   final String image;
 
   const ProductDetail1({
+    required this.productId,
     required this.title,
     required this.description,
     required this.price,
@@ -33,14 +33,6 @@ class _ProductDetail1State extends State<ProductDetail1> {
         if (quantity > 1) quantity--;
       });
 
-  // Fungsi untuk mengubah harga dengan menghapus simbol dan karakter lain
-  double parsePrice(String price) {
-    // Menghapus semua karakter selain angka dan koma
-    String cleanedPrice = price.replaceAll(RegExp(r'[^\d]'), '');
-    // Mengonversi string yang sudah dibersihkan ke double
-    return double.parse(cleanedPrice);
-  }
-
   Future<void> addToCart() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -57,17 +49,12 @@ class _ProductDetail1State extends State<ProductDetail1> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:5000/api/cart'),
+        Uri.parse('http://localhost:5000/api/cart/${widget.productId}'), // Ganti <API_SERVER_IP>
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'product_name': widget.title,
-          'price': parsePrice(widget.price), // Menggunakan fungsi parsePrice
-          'quantity': quantity,
-          'image': widget.image,
-        }),
+        body: jsonEncode({'quantity': quantity}),
       );
 
       if (response.statusCode == 200) {
@@ -77,16 +64,29 @@ class _ProductDetail1State extends State<ProductDetail1> {
             backgroundColor: Colors.green,
           ),
         );
+      } else if (response.statusCode == 404) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Produk tidak ditemukan."),
+            backgroundColor: Colors.red,
+          ),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Gagal: ${response.body}"),
+            content: Text("Terjadi kesalahan: ${response.statusCode}"),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
       print("Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Terjadi kesalahan saat menghubungi server."),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -96,9 +96,9 @@ class _ProductDetail1State extends State<ProductDetail1> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     final List<String> ketentuan = [
-      "Untuk wilayah Tangerang Seberang, L2, dan L3 harga naik/tambah Rp50.000/M3.",
-      "Untuk wilayah Tangerang Kota harga naik/tambah Rp70.000/M3.",
-      "Untuk wilayah Masuk BAKAU harga naik/tambah Rp100.000/M3.",
+      "Untuk wilayah Tenggarong Seberang, L2, dan L3 harga di atas naik/tambah Rp50.000/M3.",
+      "Untuk wilayah Tenggarong Kota harga di atas naik/tambah Rp70.000/M3.",
+      "Untuk wilayah Muara Badak harga di atas naik/tambah Rp100.000/M3.",
       "Harga belum termasuk PPN 11%.",
       "Slump 10 ± 2 cm.",
       "Harga sudah termasuk pengujian sample beton di Laboratorium DAP Beton.",
@@ -111,7 +111,7 @@ class _ProductDetail1State extends State<ProductDetail1> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color(0xFFF7F7F7),
+        backgroundColor: const Color(0xFFF7F7F7),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
         title: Text('Detail Produk',
@@ -214,27 +214,6 @@ class _ProductDetail1State extends State<ProductDetail1> {
                                 style: GoogleFonts.roboto(
                                     fontSize: 13, color: Colors.black)),
                           )),
-                      const SizedBox(height: 30),
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => MidtransPaymentPage()),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 211, 47, 47),
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 14, horizontal: 20),
-                          ),
-                          child: Text('Lanjut ke Pembayaran',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 14, color: Colors.white)),
-                        ),
-                      ),
-                      const SizedBox(height: 30),
                     ],
                   ),
                 ),

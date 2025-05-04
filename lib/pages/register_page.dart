@@ -46,22 +46,21 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (response.statusCode == 201) {
         Fluttertoast.showToast(
-              msg: "✅ Pendaftaran Berhasil",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              backgroundColor: const Color.fromARGB(255, 63, 142, 56), // Warna hijau lebih soft
-              textColor: Colors.white,
-              fontSize: 16.0,
-              timeInSecForIosWeb: 2, // Durasi tampilan toast
-              webBgColor:
-                  "linear-gradient(to right, #32a852, #1e7e34)", // Warna gradient untuk web
-              webPosition: "center",
-            );
+          msg: "✅ Pendaftaran Berhasil",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: const Color.fromARGB(255, 63, 142, 56),
+          textColor: Colors.white,
+          fontSize: 16.0,
+          timeInSecForIosWeb: 2,
+          webBgColor: "linear-gradient(to right, #32a852, #1e7e34)",
+          webPosition: "center",
+        );
 
         Navigator.pushReplacement(
-            // ignore: use_build_context_synchronously
-            context,
-            MaterialPageRoute(builder: (context) => LoginPage()));
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
       } else {
         Fluttertoast.showToast(
           msg: "Pendaftaran gagal, coba lagi",
@@ -75,8 +74,14 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildTextField(
-      IconData icon, String hintText, TextEditingController controller,
-      {bool isPassword = false, bool isEmail = false, bool isPhone = false}) {
+    IconData icon,
+    String hintText,
+    TextEditingController controller, {
+    bool isPassword = false,
+    bool isEmail = false,
+    bool isPhone = false,
+    Function(String)? onFieldSubmitted,
+  }) {
     return TextFormField(
       controller: controller,
       obscureText: isPassword,
@@ -85,17 +90,18 @@ class _RegisterPageState extends State<RegisterPage> {
           : isPhone
               ? TextInputType.phone
               : TextInputType.text,
-     decoration: InputDecoration(
-      filled: true,
-      fillColor: Color(0xFFF2F2F2), // Warna abu-abu seperti halaman login
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8), // Sudut melengkung
-        borderSide: BorderSide.none, // Menghilangkan border default
+      onFieldSubmitted: onFieldSubmitted,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Color(0xFFF2F2F2),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        prefixIcon: Icon(icon, color: Colors.grey[700]),
+        hintText: hintText,
+        hintStyle: TextStyle(color: Colors.grey[700]),
       ),
-      prefixIcon: Icon(icon, color: Colors.grey[700]), // Ikon di kiri
-      hintText: hintText,
-      hintStyle: TextStyle(color: Colors.grey[700]),
-    ),
       validator: (value) {
         if (value == null || value.isEmpty) {
           return "$hintText tidak boleh kosong";
@@ -147,25 +153,22 @@ class _RegisterPageState extends State<RegisterPage> {
                         )),
                     const SizedBox(height: 9),
                     Image.asset('assets/truck.png', width: 200),
-                    
                     const SizedBox(height: 9),
-                    _buildTextField(
-                        Icons.person, "Nama lengkap", nameController),
+                    _buildTextField(Icons.person, "Nama lengkap", nameController),
                     const SizedBox(height: 25),
-                    _buildTextField(Icons.email, "Email", emailController,
-                        isEmail: true),
+                    _buildTextField(Icons.email, "Email", emailController, isEmail: true),
                     const SizedBox(height: 25),
-                    _buildTextField(
-                        Icons.phone, "Nomor Handphone", phoneController,
-                        isPhone: true),
+                    _buildTextField(Icons.phone, "Nomor Handphone", phoneController, isPhone: true),
                     const SizedBox(height: 25),
-                    _buildTextField(
-                        Icons.lock, "Kata sandi", passwordController,
-                        isPassword: true),
+                    _buildTextField(Icons.lock, "Kata sandi", passwordController, isPassword: true),
                     const SizedBox(height: 17),
                     _buildTextField(
-                        Icons.lock, "Konfirmasi Kata sandi", confirmpasswordController,
-                        isPassword: true),
+                      Icons.lock,
+                      "Konfirmasi Kata sandi",
+                      confirmpasswordController,
+                      isPassword: true,
+                      onFieldSubmitted: (_) => _register(), // Trigger saat tekan Enter
+                    ),
                     const SizedBox(height: 17),
                     Row(
                       children: [
@@ -229,31 +232,26 @@ class _RegisterPageState extends State<RegisterPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Sudah punya akun?",
-                            style: GoogleFonts.mulish(fontSize: 13)),
-                            
-                         MouseRegion(
-                        cursor: SystemMouseCursors
-                            .click, // Mengubah kursor saat hover
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => LoginPage(),
+                        Text("Sudah punya akun?", style: GoogleFonts.mulish(fontSize: 13)),
+                        MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => LoginPage()),
+                              );
+                            },
+                            child: Text(
+                              " Masuk sekarang",
+                              style: GoogleFonts.mulish(
+                                color: Color(0xFFD32F2F),
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
                               ),
-                            );
-                          },
-                          child: Text(
-                            " Masuk sekarang",
-                            style: GoogleFonts.mulish(
-                              color: Color(0xFFD32F2F),
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                         ),
                       ],
                     ),
                     const SizedBox(height: 30),
